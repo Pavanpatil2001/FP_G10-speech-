@@ -1,0 +1,50 @@
+BASIS PURSUIT
+
+% Define parameters
+n = 5000;
+t = linspace(0, 1/8, n);
+
+% Load speech sample
+speech_path = 'D:\audiosamples\LJ001-0001.wav';
+[speech, fs] = audioread(speech_path);
+
+% Resample the speech signal to match the time vector
+speech_resampled = interp1((1:length(speech))/fs, speech, t);
+
+% Sampling parameters
+m = 200;
+temp = randperm(n);
+ind = temp(1:m);
+tr = t(ind);
+fr = speech_resampled(ind);
+
+% Measurement matrix
+A = dct(eye(n, n));
+A = A(ind, :);
+
+% Basis Pursuit Optimization
+cvx_begin
+variable x(n);
+minimize(norm(x, 1));
+subject to
+    A*x == fr.';
+cvx_end
+
+% Reconstructed signal
+reconstructed_signal = idct(x);
+
+% Plotting original and reconstructed signals
+figure;
+subplot(2, 1, 1);
+plot(t, speech_resampled, 'b', 'LineWidth', 1.5); % Original signal in blue
+title('Original Speech Signal');
+xlabel('Time');
+ylabel('Amplitude');
+
+subplot(2, 1, 2);
+plot(t, reconstructed_signal, 'r', 'LineWidth', 1.5); % Reconstructed signal in red
+title('Reconstructed Signal');
+xlabel('Time');
+ylabel('Amplitude');
+
+legend('Original Signal', 'Reconstructed Signal');
